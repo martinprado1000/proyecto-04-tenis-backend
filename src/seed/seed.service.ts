@@ -13,6 +13,7 @@ import { User } from 'src/users/schemas/user.schema';
 import { Tournament } from 'src/tournaments/schemas/tournament.schema';
 import { FormatoTorneo } from 'src/tournaments/enums/formato-torneo.enum';
 import { PlayerStatistics } from 'src/statistics/schemas/player-statistics.schema';
+import { SportsAnalysisSession } from 'src/sportsAnalysis/sportsAnalysis.schema';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class SeedService {
     @InjectModel(Organization.name) private readonly organizationModel: Model<Organization>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(PlayerStatistics.name) private readonly statisticsModel: Model<PlayerStatistics>,
+    @InjectModel(SportsAnalysisSession.name) private readonly sportsAnalysisModel: Model<SportsAnalysisSession>,
   ) { }
 
   // Run seed.
@@ -110,11 +112,13 @@ export class SeedService {
         ],
       });
       await this.statisticsModel.deleteMany({ userId: { $in: bulkUserIdsOutsideDemo } });
+      await this.sportsAnalysisModel.deleteMany({ userId: { $in: bulkUserIdsOutsideDemo } });
       await this.userModel.deleteMany({ _id: { $in: bulkUserIdsOutsideDemo } });
     }
 
     await this.tournamentModel.deleteMany({ organizationId: demoOrganizationId });
     await this.statisticsModel.deleteMany({ organizationId: demoOrganizationId });
+    await this.sportsAnalysisModel.deleteMany({ organizationId: demoOrganizationId });
     await this.userModel.deleteMany({ organizationId: demoOrganizationId });
     const adminPassword = await bcrypt.hash('Test123*', 10);
     await this.userModel.create({ name: 'Demo', lastname: 'Administrador', email: 'demo@gmail.com', password: adminPassword, roles: [Role.ADMIN], isActive: true, sexo: Sexo.MASCULINO, telefono: '+5493415550000', organizationId: organization._id });
@@ -134,6 +138,76 @@ export class SeedService {
       users.push(user);
     }
     const ids = users.map((u) => u._id);
+    const sessionsToCreate: any[] = [];
+    for (const [userIndex, user] of users.entries()) {
+      const sessionDates = [new Date('2024-05-12'), new Date('2025-02-18')];
+      sessionDates.forEach((date, index) => {
+        const profile = userIndex + 1;
+        const progress = index * 2;
+        const firstServeTotal = 34 + ((profile * 7) % 17) + index * 5;
+        const firstServeIn = Math.min(firstServeTotal, 18 + ((profile * 5) % 15) + progress * 3);
+        const secondServeTotal = 14 + ((profile * 3) % 9);
+        const secondServeIn = Math.min(secondServeTotal, 7 + ((profile * 2) % 8) + index);
+        const groundstrokesTotal = 42 + ((profile * 11) % 31) + index * 8;
+        const deepGroundstrokes = Math.min(groundstrokesTotal, 16 + ((profile * 7) % 23) + index * 4);
+        const netApproaches = 6 + ((profile * 5) % 12) + index * 2;
+        const netWon = Math.min(netApproaches, 2 + ((profile * 3) % 8) + index);
+        const totalRallies = 34 + ((profile * 13) % 37) + index * 7;
+        sessionsToCreate.push({
+          userId: user._id,
+          organizationId: demoOrganizationId,
+          date,
+          title: index === 0 ? 'Sesión de preparación' : 'Análisis de rendimiento',
+          opponent: index === 1 ? 'Rival demo' : undefined,
+          type: 'session',
+          serving: {
+            firstServeTotal,
+            firstServeIn,
+            secondServeTotal,
+            secondServeIn,
+            doubleFaults: Math.max(0, 4 - ((profile + index) % 4)),
+            net: 1 + ((profile + index) % 5),
+            long: 2 + ((profile * 2 + index) % 6),
+            t: 3 + ((profile * 3 + index) % 8),
+            body: 2 + ((profile * 5 + index) % 7),
+            wide: 1 + ((profile * 7 + index) % 6),
+          },
+          groundstrokes: {
+            total: groundstrokesTotal,
+            deep: deepGroundstrokes,
+            short: 3 + ((profile * 3 + index) % 9),
+            winners: 5 + ((profile * 5 + index * 2) % 15),
+            errorsNet: 2 + ((profile + index) % 6),
+            errorsLong: 2 + ((profile * 2 + index) % 7),
+            forehandWinners: 3 + ((profile * 7 + index) % 12),
+            backhandWinners: 2 + ((profile * 11 + index) % 10),
+          },
+          netPlay: {
+            approaches: netApproaches,
+            won: netWon,
+            smashes: 1 + ((profile + index) % 5),
+            smashesWon: 1 + ((profile * 2 + index) % 4),
+            volleys: 3 + ((profile * 3 + index) % 10),
+            volleysWon: 1 + ((profile * 5 + index) % 8),
+            errors: 1 + ((profile * 7 + index) % 5),
+          },
+          rally: {
+            totalRallies,
+            winners: 6 + ((profile * 7 + index * 2) % 18),
+            forcedErrors: 3 + ((profile * 5 + index) % 12),
+            unforcedErrors: 3 + ((profile * 11 + index) % 13),
+            breakPointsWon: 1 + ((profile * 3 + index) % 6),
+            breakPointsLost: 1 + ((profile * 5 + index) % 5),
+          },
+          notes: index === 0 ? `Trabajo personalizado de servicio y golpes de fondo para perfil ${profile}.` : `Seguimiento de presión y juego de red del perfil ${profile}.`,
+          coachRating: 5 + ((profile + index * 2) % 6),
+        });
+      });
+    }
+    if (sessionsToCreate.length > 0) {
+      await this.sportsAnalysisModel.insertMany(sessionsToCreate);
+    }
+
     const dates = [
       { fecha: new Date('2023-02-15'), sets: [{ local: 6, visitante: 3 }, { local: 6, visitante: 4 }], jugado: true, resultado: '6-3 / 6-4' },
       { fecha: new Date('2024-06-20'), sets: [{ local: 4, visitante: 6 }, { local: 6, visitante: 3 }, { local: 7, visitante: 5 }], jugado: true, resultado: '4-6 / 6-3 / 7-5' },
@@ -147,14 +221,15 @@ export class SeedService {
       const fechas = jugadores.map((id, index) => ({
         jugadores: [id, jugadores[(index + 1) % jugadores.length]],
         ...JSON.parse(JSON.stringify(dates[t % dates.length])),
-        round: 1,
+        round: index + 1,
         order: index + 1,
       }));
       await this.tournamentModel.create({ name: `Histórico Demo ${t + 1}`, formato: FormatoTorneo.ROUND_ROBIN_SINGLE_MASCULINO, jugadores, fechas, setsCount: 3, organizationId: demoOrganizationId, isActive: true });
     }
     const torneosDemo = await this.tournamentModel.countDocuments({ organizationId: demoOrganizationId });
     const usuariosDemo = await this.userModel.countDocuments({ organizationId: demoOrganizationId, roles: Role.USER });
-    return { message: 'Carga bulk completada', administrador: 'demo@gmail.com', usuariosCreados: users.length, usuariosDemo, torneosCreados: 6, torneosDemo };
+    const sesionesAnalisisDemo = await this.sportsAnalysisModel.countDocuments({ organizationId: demoOrganizationId });
+    return { message: 'Carga bulk completada', administrador: 'demo@gmail.com', usuariosCreados: users.length, usuariosDemo, torneosCreados: 6, torneosDemo, sesionesAnalisisCreadas: sesionesAnalisisDemo };
   }
 
 

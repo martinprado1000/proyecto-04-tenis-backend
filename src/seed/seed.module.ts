@@ -10,6 +10,7 @@ import { Tournament, TournamentSchema } from 'src/tournaments/schemas/tournament
 import { User, UserSchema } from 'src/users/schemas/user.schema';
 import { PlayerStatistics, PlayerStatisticsSchema } from 'src/statistics/schemas/player-statistics.schema';
 import { Organization, OrganizationSchema } from 'src/organizations/schemas/organization.schema';
+import { SportsAnalysisSession, SportsAnalysisSessionSchema } from 'src/sportsAnalysis/sportsAnalysis.schema';
 
 @Module({
 
@@ -27,6 +28,7 @@ import { Organization, OrganizationSchema } from 'src/organizations/schemas/orga
       { name: Organization.name, schema: OrganizationSchema },
       { name: User.name, schema: UserSchema },
       { name: PlayerStatistics.name, schema: PlayerStatisticsSchema },
+      { name: SportsAnalysisSession.name, schema: SportsAnalysisSessionSchema },
     ]),
   ],
 

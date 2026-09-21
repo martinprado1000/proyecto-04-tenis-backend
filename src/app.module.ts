@@ -27,6 +27,7 @@ import { TenantMiddleware } from 'src/common/middlewares/tenant.middleware';
 import { mailerConfigFactory } from './appConfig/mailer.config';
 import { SystemBrandingModule } from 'src/system-branding/system-branding.module';
 import { StatisticsModule } from 'src/statistics/statistics.module';
+import { SportsAnalysisModule } from 'src/sportsAnalysis/sportsAnalysis.module';
 //import { CommonModule } from 'src/common/common.module';
 //import { LoggerModule } from 'src/logger/logger.module';
 
@@ -80,6 +81,7 @@ import { StatisticsModule } from 'src/statistics/statistics.module';
     SystemBrandingModule,
     AuditLogsModule,
     StatisticsModule,
+    SportsAnalysisModule,
 
   ]
   
