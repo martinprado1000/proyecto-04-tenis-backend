@@ -92,6 +92,18 @@ export class User extends Document {
   isActive: boolean;
 
   @ApiProperty({
+    description: 'Indica si el usuario es cliente y debe figurar en la gestión de cuotas',
+    example: false,
+    default: false,
+    required: false,
+  })
+  @Prop({
+    required: false,
+    default: false,
+  })
+  isClient?: boolean;
+
+  @ApiProperty({
     description: 'Sexo',
     enum: Sexo,
     required: false,

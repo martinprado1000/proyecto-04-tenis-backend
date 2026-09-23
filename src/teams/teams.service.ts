@@ -185,6 +185,7 @@ export class TeamsService {
       integrante1: mapUser(obj.integrante1),
       integrante2: mapUser(obj.integrante2),
       tipo: obj.tipo,
+      organizationId: obj.organizationId?._id?.toString() || obj.organizationId?.toString() || null,
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
     };

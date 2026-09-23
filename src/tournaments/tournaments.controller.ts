@@ -21,6 +21,7 @@ import {
 import { idMongoPipe } from 'src/common/pipes/idMongo.pipe';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { ValidRoles } from 'src/auth/interfaces';
+import { resolveOrganizationId } from 'src/common/utils/resolve-organization-id.util';
 
 @ApiTags('Admin / Torneos')
 @Controller('admin/torneos')
@@ -31,9 +32,10 @@ export class TournamentsController {
   @Get()
   @ApiResponse({ status: 200, description: 'Tournaments list', type: [ResponseTournamentDto] })
   async findAll(@Req() req: any, @GetUser() user: any) {
-    const organizationId = req.organizationId || user?.organizationId?.toString();
+    const organizationId = resolveOrganizationId(req, user);
     if (!organizationId) {
-      return [];
+      if (!user?.roles?.includes(ValidRoles.SUPERADMIN)) return [];
+      return await this.tournamentsService.findAll();
     }
     return await this.tournamentsService.findAll(organizationId);
   }

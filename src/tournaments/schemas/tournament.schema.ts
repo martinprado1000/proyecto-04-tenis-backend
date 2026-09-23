@@ -101,6 +101,7 @@ export class Tournament extends Document {
         ],
         resultado: { type: String, required: false },
         jugado: { type: Boolean, default: false },
+        bye: { type: Boolean, default: false, required: false },
         round: { type: Number, required: false },
         thirdPlace: { type: Boolean, default: false, required: false },
         reemplazado1: { type: Boolean, default: false, required: false },

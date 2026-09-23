@@ -28,6 +28,7 @@ import { mailerConfigFactory } from './appConfig/mailer.config';
 import { SystemBrandingModule } from 'src/system-branding/system-branding.module';
 import { StatisticsModule } from 'src/statistics/statistics.module';
 import { SportsAnalysisModule } from 'src/sportsAnalysis/sportsAnalysis.module';
+import { QuotasModule } from 'src/quotas/quotas.module';
 //import { CommonModule } from 'src/common/common.module';
 //import { LoggerModule } from 'src/logger/logger.module';
 
@@ -82,6 +83,7 @@ import { SportsAnalysisModule } from 'src/sportsAnalysis/sportsAnalysis.module';
     AuditLogsModule,
     StatisticsModule,
     SportsAnalysisModule,
+    QuotasModule,
 
   ]
   

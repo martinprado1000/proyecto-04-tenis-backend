@@ -301,18 +301,18 @@ export class TournamentsService {
           const p1 = pool[i];
           const p2 = pool[numParticipants - 1 - i];
 
-          if (p1 && p2) {
-            fechas.push({
-              jugadores: esSingle ? [p1, p2] : undefined,
-              equipos: esSingle ? undefined : [p1, p2],
-              fecha: null,
-              sets: emptySets(),
-              resultado: null,
-              jugado: false,
-              round: r + 1,
-              order: order++,
-            });
-          }
+          // Keep bye rows in the fixture so every participant appears once per round.
+          fechas.push({
+            jugadores: esSingle ? [p1, p2] : undefined,
+            equipos: esSingle ? undefined : [p1, p2],
+            fecha: null,
+            sets: emptySets(),
+            resultado: null,
+            jugado: false,
+            round: r + 1,
+            order: order++,
+            bye: !p1 || !p2,
+          });
         }
         // Rotate pool keeping pool[0] fixed
         const last = pool.pop()!;
@@ -430,12 +430,6 @@ export class TournamentsService {
       ? (targetMatch.jugadores && targetMatch.jugadores[1])
       : (targetMatch.equipos && targetMatch.equipos[1]);
 
-    if (!p1 || !p2) {
-      throw new BadRequestException(
-        'No se pueden ingresar resultados hasta que ambos participantes estén asignados al partido.',
-      );
-    }
-
     if (body.fecha !== undefined) {
       if (body.fecha !== null && body.fecha !== '' && Number.isNaN(new Date(body.fecha).getTime())) {
         throw new BadRequestException('La fecha límite no es válida');
@@ -443,6 +437,12 @@ export class TournamentsService {
       tournament.fechas[idx].fecha = body.fecha || null;
       const updatedByDate = await this.tournamentsRepository.update(id, { fechas: tournament.fechas });
       return this.mapTournamentToResponse(updatedByDate);
+    }
+
+    if (!p1 || !p2) {
+      throw new BadRequestException(
+        'No se pueden ingresar resultados hasta que ambos participantes estén asignados al partido.',
+      );
     }
 
     const sets = body.sets;
@@ -483,10 +483,10 @@ export class TournamentsService {
           && tieLocal >= 0
           && tieVisitante >= 0
           && Math.max(tieLocal, tieVisitante) >= 7
-          && Math.abs(tieLocal - tieVisitante) === 2
+          && Math.abs(tieLocal - tieVisitante) >= 2
           && (local === 7 ? tieLocal > tieVisitante : tieVisitante > tieLocal);
         if (!tieBreakValido) {
-          throw new BadRequestException(`Set ${idxSet + 1}: el tie-break debe terminar con al menos 7 puntos y exactamente 2 de diferencia, y ganarlo el participante que tiene 7 juegos`);
+          throw new BadRequestException(`Set ${idxSet + 1}: el tie-break debe terminar con al menos 7 puntos y una diferencia mínima de 2, y ganarlo el participante que tiene 7 juegos`);
         }
       } else if (s.tieBreakLocal !== undefined || s.tieBreakVisitante !== undefined) {
         throw new BadRequestException(`Set ${idxSet + 1}: solo el marcador 7-6 puede tener tie-break`);
@@ -527,6 +527,10 @@ export class TournamentsService {
     tournament.fechas[idx].sets = sets;
     tournament.fechas[idx].jugado = true;
     tournament.fechas[idx].resultado = `${sets.map((s: any) => `${s.local}-${s.visitante}`).join(' / ')}`;
+    const isRoundRobin = (tournament.formato || '').toString().toLowerCase().includes('roundrobin')
+      || (tournament.formato || '').toString().toLowerCase().includes('round robin');
+
+    if (!isRoundRobin) {
     // propagate winner to next round placeholder (if any)
     try {
       const currentRound = tournament.fechas[idx].round || 1;
@@ -598,8 +602,10 @@ export class TournamentsService {
       debugActions.push(msg);
       this.logger.log(TournamentsService.name, msg);
     }
+    }
 
     // Fallback: If semifinal round just finished, populate third-place placeholder with semifinal losers
+    if (!isRoundRobin) {
     try {
       const roundsAll: Record<number, { f: any; i: number }[]> = {};
       tournament.fechas.forEach((f: any, i: number) => {
@@ -651,6 +657,7 @@ export class TournamentsService {
       const msg = `Error asignando 3er puesto: ${e?.message || e}`;
       debugActions.push(msg);
       this.logger.log(TournamentsService.name, msg);
+    }
     }
 
     const updated = await this.tournamentsRepository.update(id, { fechas: tournament.fechas });
@@ -880,6 +887,7 @@ export class TournamentsService {
               jugado: f.jugado || false,
               round: f.round || null,
               thirdPlace: f.thirdPlace || false,
+              bye: Boolean(f.bye || !p1 || !p2),
               reemplazado1: f.reemplazado1 || false,
               reemplazado2: f.reemplazado2 || false,
               order: f.order || null,
@@ -887,6 +895,7 @@ export class TournamentsService {
           }).sort((a:any,b:any)=> (a.order ?? 0) - (b.order ?? 0))
         : [],
       isActive: obj.isActive ?? true,
+      organizationId: obj.organizationId?._id?.toString() || obj.organizationId?.toString() || null,
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
     };

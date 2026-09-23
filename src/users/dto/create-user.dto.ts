@@ -141,6 +141,18 @@ export class CreateUserDto {
   isActive?: boolean;
 
   @ApiProperty({
+    description: 'Indica si el usuario es cliente',
+    type: 'boolean',
+    nullable: true,
+    required: false,
+    default: false,
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isClient?: boolean;
+
+  @ApiProperty({
     description: 'Sexo',
     enum: Sexo,
     nullable: true,

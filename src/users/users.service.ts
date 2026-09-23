@@ -82,10 +82,14 @@ export class UsersService {
   async findAllActiveUsersResponse(
     paginationDto: PaginationDto,
     organizationId?: string,
+    clientsOnly = false,
   ): Promise<ResponseUserDto[]> {
-    const users = organizationId
-      ? await this.userModel.find({ organizationId, isActive: true, roles: { $ne: Role.SUPERADMIN } }).sort({ createdAt: -1 })
-      : await this.findAllActiveUsers(paginationDto);
+    const filter: any = {
+      roles: { $ne: Role.SUPERADMIN },
+      ...(organizationId ? { organizationId } : {}),
+      ...(clientsOnly ? { isClient: true } : { isActive: true }),
+    };
+    const users = await this.userModel.find(filter).sort({ createdAt: -1 });
     return plainToInstance(
       ResponseUserDto,
       users.map((user) => user.toObject()),

@@ -14,6 +14,11 @@
             "date": 1789992715607,
             "name": "logsFiles\\logsRatate-2026-09-21.log",
             "hash": "e15f95972aa80f485a9931e1af10e3b7450710060c1f7c2ce336b56e2f3c4ab6"
+        },
+        {
+            "date": 1790074964778,
+            "name": "logsFiles\\logsRatate-2026-09-22.log",
+            "hash": "e448841670fea09f51aa3a584d4a06df9edd07815e9f7b950bf549ccdf71d3fb"
         }
     ],
     "hashType": "sha256"

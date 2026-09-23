@@ -23,6 +23,9 @@ export class ResponseUserDto {
   isActive: boolean;
 
   @Expose()
+  isClient?: boolean;
+
+  @Expose()
   sexo?: Sexo;
 
   @Expose()
