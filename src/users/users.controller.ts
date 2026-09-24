@@ -102,8 +102,9 @@ export class UsersController {
   @HttpCode(204)
   async recoveryPassword(
     @Body() EmailUserDto: EmailUserDto,
+    @Req() req: any,
   ) {
-    return await this.usersService.recoveryPassword(EmailUserDto);
+    return await this.usersService.recoveryPassword(EmailUserDto, req.organizationId);
   }
 
   @Delete('users/:id')

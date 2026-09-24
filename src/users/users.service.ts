@@ -12,6 +12,7 @@ import { plainToInstance } from 'class-transformer';
 import { Document as DocumentMongoose, isValidObjectId, Model } from 'mongoose';
 
 import { User } from 'src/users/schemas/user.schema';
+import { Organization } from 'src/organizations/schemas/organization.schema';
 import {
   CreateUserDto,
   EmailUserDto,
@@ -35,6 +36,8 @@ export class UsersService {
 
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+
+    @InjectModel(Organization.name) private organizationModel: Model<Organization>,
 
     private readonly configService: ConfigService,
 
@@ -264,7 +267,7 @@ export class UsersService {
   }
 
   // -----------RECOVERY PASSWORD-------------------------------------------------------------------------------
-  async recoveryPassword(emailUserDto: EmailUserDto) {
+  async recoveryPassword(emailUserDto: EmailUserDto, organizationId?: string) {
     const userFound = await this.findOneResponse(emailUserDto.email);
 
     try {
@@ -279,7 +282,23 @@ export class UsersService {
         null,
       );
 
-      this.sendEmailService.recoveryPassword(emailUserDto, randomString);
+      // Buscar nombre y logo de la organización si se provee el id
+      let organizationName: string | undefined;
+      let organizationLogoUrl: string | undefined;
+      if (organizationId) {
+        const org = await this.organizationModel.findById(organizationId).exec();
+        if (org) {
+          organizationName = org.name;
+          organizationLogoUrl = org.logoUrl;
+        }
+      }
+
+      this.sendEmailService.recoveryPassword(
+        emailUserDto,
+        randomString,
+        organizationName,
+        organizationLogoUrl,
+      );
 
       this.logger.http(
         UsersService.name,

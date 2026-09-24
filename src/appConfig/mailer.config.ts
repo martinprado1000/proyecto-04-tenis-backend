@@ -14,6 +14,6 @@ export const mailerConfigFactory = async (
     },
   },
   defaults: {
-    from: `"No Reply" <${configService.get<string>('MAIL_FROM')}>`,
+    from: `"No Reply" <${configService.get<string>('MAILER_USER')}>`,
   },
 });
